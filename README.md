@@ -1,6 +1,6 @@
 # Xameren's CS2 evaluation script
 A simple script that evaluates your matches from CS2 (Note that you have to manually import data)
-[A screenshot of the script](https://github.com/Xameren/CS2-evaluation/blob/main/screenshot.png)
+![A screenshot of the script](https://github.com/Xameren/CS2-evaluation/blob/main/screenshot.png)
 ## Features
 - User profile
   - Displays player statistics like
