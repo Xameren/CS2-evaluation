@@ -3,7 +3,9 @@ import time
 import sys
 import json
 import os
+
 os.system("title " + "Xameren's CS2 evaluation script")
+
 
 Kills = 0
 Deaths = 0  
@@ -24,8 +26,17 @@ Wins = 0
 Draws = 0
 Losses = 0
 
+
+
 SaveFile = "Savefile.json"
 GameList = []
+
+
+# Meant for changing the color of print statements
+# print(f"This text would be normal {RED} This text would be red {END} This text would go back to being normal")
+# Be aware that it does not automatically reset the color for the next line.
+# print(f"{RED} This text will be red")
+# print("But this would also be red")
 
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
@@ -35,39 +46,34 @@ END = '\033[0m'
 
 def rating(Newkills, NewDeaths, NewAssists, NewHS, NewDamage, NewRounds, NewWin, AddMatchTotal, MatchDate = "N/A"):
     global TotalRating, Rounds, Kills, Deaths, Assists, HS, Damage, Matches, TotalAssistRating, TotalDamageRating, TotalHSrating,TotalKillRating, GameList, TotalTotalRating, Wins, Draws, Losses
-    KillRating = round((Newkills/NewDeaths)/2, 3)
-    AssistRating = round(NewAssists/8, 3)
-    HSrating = round(NewHS/100, 3)
-    DamageRating = NewDamage/(135*NewRounds)
-
-    KillRating = min(Newkills/(NewRounds*1.25), 1)*0.4+min((Newkills/NewDeaths)/1.25, 1)*0.4-min(NewDeaths/NewRounds, 1)*0.2
-    AssistRating= min(NewAssists/(NewRounds*0.5), 1)*0.6+min(NewAssists/(NewAssists+Newkills), 1)*0.4
-    HSrating = NewHS/100*0.6+min(NewHS/100*Newkills/Newkills, 1)*0.4
-    DamageRating = min(NewDamage/(NewRounds*125), 1)*0.5+min(Newkills/(NewRounds*1.25), 1)*0.3+min(NewDamage/Newkills/125, 1)*0.2
     
+    # Calculates your rating
+    KillRating = min(min(Newkills/(NewRounds*1.25), 1)*0.4+min((Newkills/NewDeaths)/1.25, 1)*0.4-min(NewDeaths/NewRounds, 1)*0.2, 1)
+    AssistRating= min(min(NewAssists/(NewRounds*0.5), 1)*0.6+min(NewAssists/(NewAssists+Newkills), 1)*0.4, 1)
+    HSrating = min(NewHS/100*0.6+min(NewHS/100*Newkills/Newkills, 1)*0.4, 1)
+    DamageRating = min(min(NewDamage/(NewRounds*125), 1)*0.5+min(Newkills/(NewRounds*1.25), 1)*0.3+min(NewDamage/Newkills/125, 1)*0.2, 1)
+    
+    # In kill rating, your kills per round is worth 40% of the rating, your kills per deaths is worth 40% and your deaths per round is worth 20%
+    # In assist rating, your Assits per round is worth 60% and your assists per (Kills+assists) is worth 40%
+    # In HS rating, your headshot percentage is worth 60% and your headshot kills are worth 40%
+    # In damage rating, your damage per round is worth 50%, your kills per round are worth 30% and your damage per kills are worth 20%
+    
+    # Sets the current date as the 
     if AddMatchTotal:
         MatchDate = datetime.now().strftime("%d/%m/%Y")
-
-    if NewWin == "y":
-        Wins += 1
-    elif NewWin == "draw":
-        Draws += 1
-    elif NewWin == "n":
-        Losses += 1
-
-    if KillRating > 1:
-        KillRating = 1
-    if AssistRating > 1:
-        AssistRating = 1
-    if HSrating > 1:
-        HSrating = 1
-    if DamageRating > 1:
-        DamageRating = 1
     
     TotalRating = KillRating*0.3+DamageRating*0.3+HSrating*0.2+AssistRating*0.2
 
-
+    #This will add the statistics to the profile
     if AddMatchTotal:
+        # Adds a win, loss, or a draw to the stats
+        if NewWin == "y":
+            Wins += 1
+        elif NewWin == "draw" or NewWin == "d":
+            Draws += 1
+        elif NewWin == "n":
+            Losses += 1
+
         Kills += Newkills
         Deaths += NewDeaths
         Assists += NewAssists
@@ -84,55 +90,80 @@ def rating(Newkills, NewDeaths, NewAssists, NewHS, NewDamage, NewRounds, NewWin,
 
         TotalTotalRating = 0.4*TotalKillRating+0.3*TotalDamageRating+0.2*TotalHSrating+0.1*TotalAssistRating
         
-
+        #Adds a match to the list of games in the format of K:, D:, A:, HS:, DMG:, Rounds:, Win:, Date:
         GameList.insert(0, f"K: {Newkills}, D: {NewDeaths}, A: {NewAssists}, HS: {NewHS}, DMG: {NewDamage}, Rounds: {NewRounds}, Win: {NewWin}, Date: {MatchDate}")
     matchstats(Newkills, NewDeaths, NewAssists, NewHS, NewDamage, NewRounds, NewWin, AssistRating, HSrating, KillRating, DamageRating, TotalRating, MatchDate)
 
 def register():
     global Username, Kills, Deaths, Assists, HS, Damage, Matches, WR
     reset = True
+    finished = False
     while reset:
         print("Welcome to xameren's CS2 evaluation tool")
         print("What's your Username?")
         Username = input("Your Username:")
-        print("Do you want to import your stats?")
-        print("You will be prompted to fill your KD, kills, assists, deaths, HS% and damage from your last round")
         while True:
-            fillornot = input("(y/n) ")
+            print("\033[H\033[J", end="")
+            print("Do you want to import your stats?")
+            print("You will be prompted to fill your KD, kills, assists, deaths, HS% and damage from your last round (y/n)")
+            fillornot = input("")            
+            print("You can always quit by saying \"q\"")
             if fillornot.lower() == "y":
                 while True:
-                    try:    
-                        Ki = int(input("Kills: "))
-                        De = int(input("Deaths: "))
-                        As = int(input("Assists: "))
-                        Hs = int(input("HS%: "))
-                        Da = int(input("Damage: "))
-                        Ro = int(input("Rounds: "))
+                    
+                    try:
+                        # Get the input, then make it an intiger. If its impossible, check if the user wrote "q". If yes, rerun it. If not, leave.
+                        Ki = De = As = Hs = Da = Ro = Wi = 0
+                        Ki = input("Kills: ")
+                        Ki = int(Ki)
+                        De = input("Deaths: ")
+                        De = int(De)
+                        As = input("Assists: ")
+                        As = int(As)
+                        Hs = input("HS%: ")
+                        Hs = int(Hs)
+                        Da = input("Damage: ")
+                        Da = int(Da)
+                        Ro = input("Rounds: ")
+                        Ro = int(Ro)
                         while True:
-                            Wi = input("Did you win? (y/draw/n)").lower()
-                            if Wi == "y" or Wi == "n" or Wi == "draw":
+                            Wi = input("Did you win? (y/d/n)").lower()
+                            if Wi == "y" or Wi == "n" or Wi == "d":
+                                finished = True
+                                break
+                            elif Wi == "q":
                                 break
                         break
                     except ValueError:
+                        # If the user wants to quit, exit the while true statement
+                        print(Ki)
+                        if Ki == "q" or De == "q" or As == "q" or Hs == "q" or Da == "q" or Ro == "q" or Wi == "q":
+                            break
                         print("Please enter valid numbers")
-                correctregister = input("Is this all correct? (y/N) ").lower()
-                if correctregister == "y":
-                    reset = False
-                    rating(Ki, De, As, Hs, Da, Ro, Wi, AddMatchTotal = True)
-                    break
+                    if Wi == "q":
+                        break
+                if finished:
+                    correctregister = input("Is this all correct? (y/N) ").lower()
+                    # if all of this is correct, rate it
+                    if correctregister == "y":
+                        reset = False
+                        rating(Ki, De, As, Hs, Da, Ro, Wi, AddMatchTotal = True)
+                        break
+            # if the user does not want to fill their last round statistics, dont force him
             elif fillornot.lower() == "n":
                 print("Alright, no problem")
                 reset = False
                 time.sleep(1)
                 break
 
+# Calculates win rate
 def WRcalc():
     if Losses == 0:
         return 100
     else:
         return round((Wins/Matches)*100, 2)
 
-
+# Determines what color a statistic should be (must provide a number on a scale of 1 to 100) (Low = bad, High = good)
 def Coloring(numbah):
     if numbah < 33:
         return RED
@@ -140,6 +171,8 @@ def Coloring(numbah):
         return YELLOW
     else:
         return GREEN
+    
+# Determines what color a statistic should be (must provide a number on a scale of 1 to 100) (Low = good, High = bad)
 def ColoringLow(numbah):
     if numbah < 33:
         return GREEN
@@ -163,6 +196,9 @@ def matchstats(Newkills, NewDeaths, NewAssists, NewHS, NewDamage, NewRounds, New
     print(f" Match {f"{GREEN}Won" if NewWin == "y" else f"{RED}Lost" if NewWin == "n" else "Drawn"}{END}")
     print(f" Rounds: {NewRounds}")
     spaces = "                                  "
+    #print(f"Coloring()" Statistic: Value
+    # Coloring is for getting the appropriate color to the value of the statistic
+    # The value must be provided as a number from 1-100, like a percentage
     print()
     print(f"{Coloring(TotalRating*100)}XMRating: {round(TotalRating*100, 3)}{END}")
     print(f"{Coloring(HSrating*100)}{spaces}HS rating:    {round(HSrating*100, 3)}{END}")
@@ -203,13 +239,6 @@ def matchstats(Newkills, NewDeaths, NewAssists, NewHS, NewDamage, NewRounds, New
 def profile():
     global Username, Matches, Kills, HS, Rounds, Damage, Deaths, Assists
     while True:
-
-        """
-    TotalAssistRating += AssistRating
-    TotalDamageRating += DamageRating
-    TotalHSrating += HSrating
-    TotalKillRating += KillRating
-        """
 
         print("\033[H\033[J", end="")
         print(f"Name: {Username}")
@@ -269,26 +298,31 @@ def profile():
             print(f"  {Coloring(round(Assists/Matches, 2)/8*100)}Average/Match: {round(Assists/Matches, 2)}{END}")
             print(f"  {Coloring(round(Assists/Rounds, 2)/0.4*100)}Average/Round: {round(Assists/Rounds, 2)}{END}")
             print("\n")
-        except Exception as e:
-            print("error ", e)
-            print("There are no stats to judge you... yet.")
+        # This gets printed if the user has not provided any matches yet
+        except Exception:
+            print("There are no stats for this script to judge you... yet.\n")
         print("c) Change username")
         print("r) Recent matches")
         print("q) Back to the main menu")
         inputprofile = input().lower()
+        # Changes the username
         if inputprofile == "c":
             newuser = input("Your new Username will be: ")
             Username = newuser
         elif inputprofile == "xamseccod":
-                print("eGFtZXJlbiBtYWRlIHRoaXM=")
+            print("eGFtZXJlbiBtYWRlIHRoaXM=")
+        # Shows the list of recently played matches
         elif inputprofile == "r":
             page = 0
             while True:
                 print("\033[H\033[J", end="")
                 print("Recent matches\n")
+                # Shows a list of 15 matches. This is multiplied by the variable "page" to allow the user to see more than
+                #  15 matches in this menu
                 for i, item in enumerate(GameList[0+(page*15):15+(page*15)]):
                     Colormatches = GameList[i]
                     values = dict(stritem.split(": ") for stritem in Colormatches.split(", "))
+                    # If its a win, make it green. If not, make it red. Then print the number of the match and the appropriate game from the GameList
                     if values["Win"] == "y":
                         print(f" {GREEN}Match {int(i)+(page*15)+1} - {item}{END}")
                     elif values["Win"] == "n":
@@ -298,7 +332,11 @@ def profile():
 
 
                 print(f"\n1 - {len(GameList)}) to view a match")
+                # If the GameList contains more than 16 matches
                 if len(GameList) > 15:
+                    # Shows you the number of matches youre viewing and the total number of matches
+                    # if = "Showing 16 - 30 out of 45 matches"
+                    # else = "Showing 31 - 45 out of 45 matches"
                     if page*15+15 < len(GameList):
                         print(f"\nShowing {page*15+1} - {page*15+15} out of {len(GameList)} matches\n")
                     else:
@@ -311,14 +349,16 @@ def profile():
 
 
                 leaveinput = input()
-# Newkills, NewDeaths, NewAssists, NewHS, NewDamage, NewRounds, NewWin, AddMatchTotal
 
                 try:
+                    
+                    # Finds the match youre looking at, translates it to the correct format, and then rates it
                     Getstats = int(leaveinput)
                     if 1 <= Getstats <= len(GameList):
                         Getstats -= 1
                         DeletedMatch = GameList[Getstats]
                         values = dict(stritem.split(": ") for stritem in DeletedMatch.split(", "))
+                        # If it doesnt contain a date, pass it without one
                         try:
                             rating(int(values["K"]), int(values["D"]), int(values["A"]), int(values["HS"]), int(values["DMG"]), int(values["Rounds"]), values["Win"], False, values["Date"])
                         except Exception:
@@ -327,16 +367,19 @@ def profile():
                 except Exception:
                     if leaveinput == "q":
                         break
+                    # Go to the next menu if its possible
                     elif leaveinput == "n":
                         if len(GameList) > page*15+15:
                             page += 1
                         else:
                             print("This is the last page.")
+                    # Go to the last menu if its possible
                     elif leaveinput == "b":
                         if 0+(page*15) > 0:
                             page -= 1
                         else:
                             print("This is the first page.")
+                    # Show the help menu
                     if leaveinput == "h":
                         print("\033[H\033[J", end="")
                         print("Help")
@@ -345,49 +388,68 @@ def profile():
                         print(" A   - Assists")
                         print(" HS  - Headshot percentage")
                         print(" DMG - Damage dealt")
-                        print(" Win - If you won (y), lost (n), or tied (draw)")
+                        print(" Win - If you won (y), lost (n), or drawn (d)")
                         print("Enter anything to exit")
                         input()
         elif inputprofile == "q":
             break
 
 def addmatch():
-    Quit = False
-    while True:
+    #quitadd means that the user does not want to add a match anymore. Quit Add
+    quitadd = False
+    while not quitadd:
+        # Asks the user for statistics, adds a match to the game list and then shows a rating screen
         print("\033[H\033[J", end="")
         print("Adding a match")
         print("Please put in your statistics of the match")
+        print("Or say \"q\" to exit")
         try:
-            Newkills = int(input("Kills: "))
-            NewDeaths = int(input("Deaths: "))
-            NewAssists = int(input("Assists: "))
-            NewHS = int(input("HS%: "))
-            NewDamage = int(input("Damage: "))
-            NewRounds = int(input("Rounds: "))
+            Newkills = NewDeaths = NewAssists = NewHS = NewDamage = NewRounds = 0
+            Newkills = input("Kills: ")
+            Newkills = int(Newkills)
+            NewDeaths = input("Deaths: ")
+            NewDeaths = int(NewDeaths)
+            NewAssists = input("Assists: ")
+            NewAssists = int(NewAssists)
+            NewHS = input("HS%: ")
+            NewHS = int(NewHS)
+            NewDamage = input("Damage: ")
+            NewDamage = int(NewDamage)
+            NewRounds = input("Rounds: ")
+            NewRounds = int(NewRounds)
             while True:
-                WINyn = input("Did you win? (y/draw/n) ").lower()
-                if WINyn == "n" or WINyn == "y" or WINyn == "draw":
+                WINyn = input("Did you win? (y/d/n) ").lower()
+                if WINyn == "n" or WINyn == "y" or WINyn == "d":
                     NewWin = WINyn
                     break
-
-            matchsure = input("Is this all correct? (y/n) ").lower()
-            if matchsure == "y":
-                break
-            elif matchsure == "n":
-                Quit = True
-                break
+                if WINyn == "q":
+                    quitadd = True
+            if not quitadd:
+                matchsure = input("Is this all correct? (y/n) ").lower()
+                if matchsure == "y":
+                    break
+                elif matchsure == "n":
+                    quitadd = True
+                    break
         except ValueError:
+            # Stop if the user wants to leave
+            if Newkills == "q" or NewDeaths == "q" or NewAssists == "q" or NewHS == "q" or NewDamage == "q" or NewRounds == "q":
+                quitadd = True
             print("Please only provide a number")
-    if not Quit:
+    if not quitadd:
         rating(Newkills, NewDeaths, NewAssists, NewHS, NewDamage, NewRounds, NewWin, True)
+    
 
 def removematch():
     global Kills, Deaths, Assists, HS, Damage, Rounds, Wins, Losses, Draws, Matches, TotalKillRating, TotalAssistRating, TotalHSrating, TotalDamageRating
+    # Asks the user to choose a match to remove, then removes that match
     print("\033[H\033[J", end="")
     page = 0
     while True:
         print("\033[H\033[J", end="")
         print("Which match would you like to remove?\n")
+        # Shows a list of 15 matches. This is multiplied by the variable "page" to allow the user to see more than
+        #  15 matches in this menu
         for i, item in enumerate(GameList[0+(page*15):15+(page*15)]):
             
             Colormatches = GameList[i]
@@ -398,6 +460,10 @@ def removematch():
                 print(f" {RED}Match {int(i)+(page*15)+1} - {item}{END}")
             else:
                 print(f" Match {int(i)+(page*15)+1} - {item}")
+
+        # Shows you the number of matches youre viewing and the total number of matches
+        # if = "Showing 16 - 30 out of 45 matches"
+        # else = "Showing 31 - 45 out of 45 matches"
         if page*15+15 < len(GameList):
             print(f"\nShowing {page*15+1} - {page*15+15} out of {len(GameList)} matches\n")
         else:
@@ -426,7 +492,7 @@ def removematch():
                     Wins -= 1
                 elif values["Win"] == "n":
                     Losses -= 1
-                elif values["Win"] == "draw":
+                elif values["Win"] == "draw" or values["Win"] == "d":
                     Draws -= 1
                     
                     """
@@ -447,7 +513,7 @@ def removematch():
                 NewDamage = int(values["DMG"])
 
 
-
+                # Removes the stats of the match from the totals. Nothing much to see here.
                 if round(round(min(Newkills/(NewRounds*1.25), 1)*0.4+min((Newkills/NewDeaths)/1.25, 1)*0.4-min(NewDeaths/NewRounds, 1)*0.2, 3)/2, 3) < 1:
                     TotalKillRating -= round(min(Newkills/(NewRounds*1.25), 1)*0.4+min((Newkills/NewDeaths)/1.25, 1)*0.4-min(NewDeaths/NewRounds, 1)*0.2, 3)
                 else:
@@ -472,6 +538,7 @@ def removematch():
                 GameList.pop(Chosen)
                 print("\033[H\033[J", end="")
         except Exception as e:
+            # quits, goes to a new page or goes back a page
             if Chosen1 == "q":
                 break
             elif Chosen1 == "n":
@@ -482,6 +549,7 @@ def removematch():
                     page -= 1
 def mainmenu():
     while True:
+        # Saves and shows the main menu
         save()
         print("\033[H\033[J", end="")
         print(f"Welcome, {BOLD}{Username}{END}")
@@ -504,6 +572,7 @@ def load():
     global Username, GameList, Kills, Deaths, Assists, HS, WR, Damage, TotalTotalRating, TotalKillRating, TotalAssistRating, TotalHSrating, TotalDamageRating, Rounds, Matches, Wins, Draws, Losses
     if os.path.exists(SaveFile):
         try:
+            # Loads all the appropriate variables from the save file
             print("Saving..")
             with open(SaveFile, 'r') as file:
                 GameState = json.load(file)
@@ -532,7 +601,7 @@ def load():
             
 def save():
     global Username, GameList, Kills, Deaths, Assists, HS, WR, Damage, TotalTotalRating, TotalKillRating, TotalAssistRating, TotalHSrating, TotalDamageRating, Rounds, Matches, Wins, Draws, Losses
-
+    # Saves all the appropriate variables to the save file
     GameState = {
         "Username": Username,
         "Kills": Kills,
@@ -558,6 +627,7 @@ def save():
         json.dump(GameState, file)
 
 def start():
+    # Starts the script. If the save file exists, it loads and puts you to the main menu, else, it prompts you to register
     if os.path.exists(SaveFile):
         load()
         mainmenu()
